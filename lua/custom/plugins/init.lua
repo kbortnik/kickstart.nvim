@@ -98,7 +98,46 @@ return {
       'nvim-lua/plenary.nvim',
     },
     config = function()
-      require('coverage').setup()
+      require('coverage').setup {
+        commants = true,
+        lang = { javascript = { coverage_file = './coverage/lcov.info' } },
+      }
+    end,
+  },
+  {
+    'christoomey/vim-tmux-navigator',
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('harpoon').setup()
+    end,
+  },
+  {
+    'MeanderingProgrammer/markdown.nvim',
+    main = 'render-markdown',
+    opts = {},
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+  },
+  {
+    'nvim-neorg/neorg',
+    lazy = false,
+    version = '*',
+    config = function()
+      require('neorg').setup {
+        load = {
+          ['core.defaults'] = {},
+          ['core.dirman'] = {
+            config = {
+              workspaces = {
+                notes = '~/notes',
+              },
+            },
+          },
+        },
+      }
     end,
   },
 }
