@@ -20,6 +20,9 @@ vim.keymap.set('n', '<C-j>', '<cmd> TmuxNavigateDown<CR>')
 vim.api.nvim_set_keymap('n', '<leader>tw', "<cmd>lua require('neotest').run.run({ jestCommand = 'pnpm dlx jest --watch ' })<cr>", {})
 
 vim.keymap.set('n', '<leader>fr', ':NvimTreeFindFile<CR>', {})
+vim.keymap.set('n', '<leader>E', ':NvimTreeToggle<CR>', {
+  desc = 'Toggle NvimTree',
+})
 
 -- Harpoon
 local harpoon = require 'harpoon'
@@ -57,3 +60,9 @@ vim.api.nvim_create_user_command('FormatEnable', function()
 end, {
   desc = 'Re-enable autoformat-on-save',
 })
+
+-- Remap p and P to behave like in VSCode
+-- xnoremap <expr> p 'pgv"'.v:register.'y`>'
+-- xnoremap <expr> P 'Pgv"'.v:register.'y`>'
+vim.keymap.set('x', 'p', '"0p')
+vim.keymap.set('x', 'P', '"0P')
