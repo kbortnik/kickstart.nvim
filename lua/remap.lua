@@ -66,3 +66,6 @@ end, {
 -- xnoremap <expr> P 'Pgv"'.v:register.'y`>'
 vim.keymap.set('x', 'p', '"0p')
 vim.keymap.set('x', 'P', '"0P')
+
+-- Claude Code
+vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude Code' })

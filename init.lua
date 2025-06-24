@@ -828,6 +828,8 @@ require('lazy').setup({
         solidity = { 'prettierd', 'prettier', 'solhintfmt', stop_after_first = true },
         sh = { 'shfmt' },
         prisma = { 'prismafmt' },
+        php = { 'phpcbf', timeout_ms = 10000 },
+        json = { 'jq' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
