@@ -828,7 +828,8 @@ require('lazy').setup({
         solidity = { 'prettierd', 'prettier', 'solhintfmt', stop_after_first = true },
         sh = { 'shfmt' },
         prisma = { 'prismafmt' },
-        php = { 'phpcbf', timeout_ms = 10000 },
+        -- php = { 'phpcbf', timeout_ms = 10000 },
+        php = { 'php' },
         json = { 'jq' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
@@ -848,6 +849,14 @@ require('lazy').setup({
         solhintfmt = {
           command = 'npx',
           args = { 'solhint', '$FILENAME' },
+          stdin = false,
+        },
+        php = {
+          command = '/opt/homebrew/bin/php-cs-fixer',
+          args = {
+            'fix',
+            '$FILENAME',
+          },
           stdin = false,
         },
       },
@@ -1119,6 +1128,7 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   { import = 'custom.plugins' },
+  { import = 'custom.plugins.languages.typescript' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
