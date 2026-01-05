@@ -408,4 +408,11 @@ return {
     -- mason-nvim-dap is loaded when nvim-dap loads
     config = function() end,
   },
+  -- Amp Plugin
+  {
+    'sourcegraph/amp.nvim',
+    branch = 'main',
+    lazy = false,
+    opts = { auto_start = true, log_level = 'info' },
+  },
 }

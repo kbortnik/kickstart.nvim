@@ -64,8 +64,8 @@ end, {
 -- Remap p and P to behave like in VSCode
 -- xnoremap <expr> p 'pgv"'.v:register.'y`>'
 -- xnoremap <expr> P 'Pgv"'.v:register.'y`>'
-vim.keymap.set('x', 'p', '"0p')
-vim.keymap.set('x', 'P', '"0P')
+vim.keymap.set('x', 'p', '"+p')
+vim.keymap.set('x', 'P', '"+P')
 
 -- Claude Code
 vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude Code' })

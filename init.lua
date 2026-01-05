@@ -666,6 +666,11 @@ require('lazy').setup({
         },
       }
 
+      -- Highlight unused code (imports, variables, etc.) with dimmed appearance
+      vim.cmd [[
+        highlight DiagnosticUnnecessary guifg=#6c7086 gui=italic
+      ]]
+
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
@@ -714,6 +719,28 @@ require('lazy').setup({
           cmd = { 'terraform-ls', 'serve' },
           filetypes = { 'hcl', 'tf', 'tfvars' },
         },
+
+        phpactor = {
+          init_options = {
+            ["language_server_phpstan.enabled"] = false,
+            ["language_server_psalm.enabled"] = false,
+          },
+        },
+
+        apex_ls = {
+          cmd = function()
+            return require('apex-lsp-setup').get_apex_cmd()
+          end,
+          filetypes = { 'apex', 'apexcode', 'apexanonymous', 'cls', 'trigger' },
+          root_dir = function(fname)
+            return require('lspconfig').util.root_pattern('sfdx-project.json', '.sfdx', '.sf', 'force-app')(fname)
+          end,
+          settings = {},
+          on_attach = function(client, bufnr)
+            -- Enable completion triggered by <c-x><c-o>
+            vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+          end,
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -730,8 +757,15 @@ require('lazy').setup({
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
+      -- Remove apex_ls since it's manually managed, not available in Mason
+      ensure_installed = vim.tbl_filter(function(name)
+        return name ~= 'apex_ls'
+      end, ensure_installed)
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'phpactor', -- PHP language server
+        'php-cs-fixer', -- PHP formatter (fallback)
+        'pretty-php', -- Better PHP formatter for mixed HTML/PHP
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -757,7 +791,42 @@ require('lazy').setup({
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
     opts = {
       settings = {
+        -- Enable code actions for fixing unused imports/variables
         expose_as_code_actions = { 'fix_all', 'add_missing_imports', 'remove_unused', 'remove_unused_imports', 'organize_imports' },
+        -- TypeScript server preferences
+        tsserver_file_preferences = {
+          -- Enable inlay hints (optional, helpful for type information)
+          includeInlayParameterNameHints = 'all',
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
+        },
+        -- Make sure unused variables and imports are shown
+        complete_function_calls = false,
+        include_completions_with_insert_text = true,
+      },
+      handlers = {
+        -- Ensure unused code diagnostics are properly tagged
+        ['textDocument/publishDiagnostics'] = function(err, result, ctx, config)
+          if result.diagnostics then
+            for _, diagnostic in ipairs(result.diagnostics) do
+              -- TypeScript error codes:
+              -- 6133: variable/import declared but never used
+              -- 6192: import declared but never used
+              -- 6196: import declared but value never used
+              if diagnostic.code == 6133 or diagnostic.code == 6192 or diagnostic.code == 6196 then
+                -- Tag as unnecessary so Neovim can dim/style it
+                diagnostic.tags = diagnostic.tags or {}
+                if not vim.tbl_contains(diagnostic.tags, vim.lsp.protocol.DiagnosticTag.Unnecessary) then
+                  table.insert(diagnostic.tags, vim.lsp.protocol.DiagnosticTag.Unnecessary)
+                end
+              end
+            end
+          end
+          vim.lsp.handlers['textDocument/publishDiagnostics'](err, result, ctx, config)
+        end,
       },
     },
   },
@@ -824,13 +893,17 @@ require('lazy').setup({
         typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
         javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        css = { 'prettierd', 'prettier', stop_after_first = true },
         scss = { 'prettierd', 'prettier' },
         solidity = { 'prettierd', 'prettier', 'solhintfmt', stop_after_first = true },
         sh = { 'shfmt' },
         prisma = { 'prismafmt' },
         -- php = { 'phpcbf', timeout_ms = 10000 },
-        php = { 'php' },
+        php = { 'pretty-php', 'php-cs-fixer', stop_after_first = true },
         json = { 'jq' },
+        jsonc = { 'prettierd', 'prettier', stop_after_first = true },
+        -- Salesforce HTML files (LWC, Visualforce, etc.)
+        html = { 'prettierd', 'prettier', stop_after_first = true },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -851,12 +924,18 @@ require('lazy').setup({
           args = { 'solhint', '$FILENAME' },
           stdin = false,
         },
-        php = {
+        ['php-cs-fixer'] = {
           command = '/opt/homebrew/bin/php-cs-fixer',
           args = {
             'fix',
             '$FILENAME',
+            '--rules=@PSR12',
           },
+          stdin = false,
+        },
+        ['pretty-php'] = {
+          command = 'pretty-php',
+          args = { '$FILENAME' },
           stdin = false,
         },
       },
@@ -1050,6 +1129,9 @@ require('lazy').setup({
         'hcl',
         'rust',
         'php',
+        'apex',
+        'soql',
+        'sosl',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1084,6 +1166,25 @@ require('lazy').setup({
       vim.filetype.add {
         pattern = {
           ['.*%.blade%.php'] = 'blade',
+          -- Salesforce LWC HTML files
+          ['.*/force%-app/.*/lwc/.*%.html'] = 'html',
+          -- Visualforce pages
+          ['.*/force%-app/.*/pages/.*%.page'] = 'html',
+          -- Visualforce components
+          ['.*/force%-app/.*/components/.*%.component'] = 'html',
+          -- Aura components
+          ['.*/force%-app/.*/aura/.*%.cmp'] = 'html',
+          ['.*/force%-app/.*/aura/.*%.app'] = 'html',
+        },
+        extension = {
+          cls = 'apex',
+          trigger = 'apex',
+          apex = 'apex',
+          -- Additional Salesforce extensions
+          page = 'html',
+          component = 'html',
+          cmp = 'html',
+          app = 'html',
         },
       }
 
