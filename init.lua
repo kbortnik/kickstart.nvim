@@ -741,6 +741,18 @@ require('lazy').setup({
             vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
           end,
         },
+
+        omnisharp = {
+          filetypes = { 'cs', 'vb', 'cshtml', 'razor' },
+          settings = {
+            FormattingOptions = {
+              EnableEditorConfigSupport = true,
+            },
+            RoslynExtensionsOptions = {
+              EnableAnalyzersSupport = true,
+            },
+          },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -1185,6 +1197,8 @@ require('lazy').setup({
           component = 'html',
           cmp = 'html',
           app = 'html',
+          -- ASP.NET Razor files
+          cshtml = 'html',
         },
       }
 

@@ -67,5 +67,3 @@ end, {
 vim.keymap.set('x', 'p', '"+p')
 vim.keymap.set('x', 'P', '"+P')
 
--- Claude Code
-vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude Code' })

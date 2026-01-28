@@ -257,21 +257,23 @@ return {
   --   },
   -- },
   {
-    'greggh/claude-code.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
+    'coder/claudecode.nvim',
+    dependencies = { 'folke/snacks.nvim' },
+    opts = {
+      diff_opts = {},
     },
-    config = function()
-      require('claude-code').setup {
-        window = {
-          split_ratio = 0.3,
-          position = 'vertical',
-          enter_insert = true,
-          hide_numbers = true,
-          hide_signcolumn = true,
-        },
-      }
-    end,
+    config = true,
+    keys = {
+      { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude' },
+      { '<leader>CC', '<cmd>ClaudeCode --chrome<cr>', desc = 'Toggle Claude (Chrome)' },
+      { '<leader>cf', '<cmd>ClaudeCodeFocus<cr>', desc = 'Focus Claude' },
+      { '<leader>cr', '<cmd>ClaudeCode --resume<cr>', desc = 'Resume Claude' },
+      { '<leader>cC', '<cmd>ClaudeCode --continue<cr>', desc = 'Continue Claude' },
+      { '<leader>cs', '<cmd>ClaudeCodeSend<cr>', mode = 'v', desc = 'Send to Claude' },
+      { '<leader>ca', '<cmd>ClaudeCodeAdd %<cr>', desc = 'Add current buffer' },
+      { '<leader>cd', '<cmd>ClaudeCodeDiffAccept<cr>', desc = 'Accept diff' },
+      { '<leader>cD', '<cmd>ClaudeCodeDiffDeny<cr>', desc = 'Deny diff' },
+    },
   },
   {
     'OXY2DEV/markview.nvim',
